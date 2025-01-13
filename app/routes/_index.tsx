@@ -1,119 +1,114 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createSwapy, SlotItemMapArray, Swapy, utils } from "swapy";
 
-import { DndContext, DragEndEvent, DragOverEvent, KeyboardSensor, MouseSensor, TouchSensor, UniqueIdentifier,useSensor, useSensors } from "@dnd-kit/core";
-import Droppable from "~/components/Droppable";
-import Draggable from "~/components/Draggable";
+type Item = {
+  id: string;
+  title: string;
+};
 
+const initialItems: Item[] = [
+  { id: "1", title: "1" },
+  { id: "2", title: "2" },
+  { id: "3", title: "3" },
+];
+
+let id = 4;
 const WebsiteBuilder: React.FC = () => {
-  const [parent, setParent] = useState<UniqueIdentifier | null>(null);
+  const [items, setItems] = useState<Item[]>(initialItems);
+  const [slotItemMap, setSlotItemMap] = useState<SlotItemMapArray>(
+    utils.initSlotItemMap(items, "id")
+  );
+  const slottedItems = useMemo(
+    () => utils.toSlottedItems(items, "id", slotItemMap),
+    [items, slotItemMap]
+  );
+  const swapyRef = useRef<Swapy | null>(null);
 
-  const components = [
-    {
-      id: "1",
-      type: "header",
-      props: {
-        text: "header",
-      },
-    },
-    {
-      id: "2",
-      type: "footer",
-      props: {
-        text: "hello this is the footer",
-      },
-    },
-  ];
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [canvasComponents, setCanvasComponents] = useState([
-   
-  ]);
-
-  
-  const mouseSensor = useSensor(MouseSensor);
-  const touchSensor = useSensor(TouchSensor);
-  const keyboardSensor = useSensor(KeyboardSensor);
-  
-  const sensors = useSensors(
-    mouseSensor,
-    touchSensor,
-    keyboardSensor,
+  useEffect(
+    () =>
+      utils.dynamicSwapy(
+        swapyRef.current,
+        items,
+        "id",
+        slotItemMap,
+        setSlotItemMap
+      ),
+    [items]
   );
 
+  useEffect(() => {
+    swapyRef.current = createSwapy(containerRef.current!, {
+      manualSwap: true,
+      // animation: 'dynamic'
+      // autoScrollOnDrag: true,
+      // swapMode: 'drop',
+      // enabled: true,
+      // dragAxis: 'x',
+      // dragOnHold: true
+    });
 
-  function handleDragEnd(event: DragEndEvent) {
-    console.log('end');
-    
-  }
-  const handleDragOver = (event: DragOverEvent) => {
-    
-    if (event?.over?.id === 'canvas') {
-      console.log(event);
-      console.log('over');
-      if (event.active.id === '1') {
-        const newComponent = [{
-          id: Math.floor(Math.random()).toString(),
-          type: 'header',
-          props: {
-            text: 'header',
-          },
-        }];
-        console.log(newComponent);
-        console.log(canvasComponents);
-        
-        
-        setCanvasComponents([...canvasComponents, ...newComponent]);
-      }
-      if (event.active.id === '2') {
-        const newComponent = [{
-          id: Math.floor(Math.random()).toString(),
-          type: 'footer',
-          props: {
-            text: 'hello this is the footer',
-          },
-        }];
-        setCanvasComponents([...canvasComponents, ...newComponent]);
-      }
+    swapyRef.current.onSwap((event) => {
+      setSlotItemMap(event.newSlotItemMap.asArray);
+    });
 
+    return () => {
+      swapyRef.current?.destroy();
+    };
+  }, []);
 
-      
-    }
-    
-  }
 
   return (
-    <DndContext onDragEnd={handleDragEnd} onDragOver={handleDragOver}   >
-      <div className="flex h-screen bg-gray-100 p-4 gap-2 justify-between">
-        <div className="bg-white  rounded w-1/5 border border-gray-200">
-          components
-          <div className="p-2 flex flex-col gap-2">
-            {components.map((component, index) => (
-              <Draggable id={component.id} key={index}>
-                <div className="bg-white rounded w-full border border-gray-200 p-1 ">
-                  {component.props.text}
-                </div>
-              </Draggable>
+    <div className="flex h-screen bg-gray-100 p-4 gap-2 justify-between">
+      <div className="bg-white  rounded w-1/5 border border-gray-200">
+        components
+        {/* <div className="container" ref={componetsContainerRef}>
+          {items.map((item) => (
+            <div className="item" key={item.id} data-swapy-item={item.id}>
+              {item.title}
+            </div>
+          ))}
+
+        </div> */}
+      </div>
+      <div className="bg-white rounded w-full border  border-gray-200">
+        canvas
+        <div className="container" ref={containerRef}>
+          <div className="items">
+            {slottedItems.map(({ slotId, itemId, item }) => (
+              <div className="slot" key={slotId} data-swapy-slot={slotId}>
+                {item && (
+                  <div className="item" data-swapy-item={itemId} key={itemId}>
+                    <span>{item.title}</span>
+                    <span
+                      className="delete"
+                      data-swapy-no-drag
+                      onClick={() => {
+                        setItems(items.filter((i) => i.id !== item.id));
+                      }}
+                    ></span>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
-        </div>
-        <div className="bg-white rounded w-full border  border-gray-200">
-          canvas
-          <Droppable id="canvas">
-
-          {canvasComponents.map((component, index) => (
-              <Draggable id={component.id.toString()} key={index}>
-                <div className="bg-white rounded w-full border border-gray-200 p-1 ">
-                  {component.props.text}
-                </div>
-              </Draggable>
-          ))}
-            
-          </Droppable>
-        </div>
-        <div className="bg-white rounded w-1/5 border border-gray-200">
-          parameters
+          <div
+            className="item item--add"
+            onClick={() => {
+              const newItem: Item = { id: `${id}`, title: `${id}` };
+              setItems([...items, newItem]);
+              id++;
+            }}
+          >
+            +
+          </div>
         </div>
       </div>
-    </DndContext>
+      <div className="bg-white rounded w-1/5 border border-gray-200">
+        parameters
+      </div>
+    </div>
   );
 };
 

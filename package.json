@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "swift-page",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -15,10 +15,12 @@
     "@remix-run/node": "^2.15.2",
     "@remix-run/react": "^2.15.2",
     "@remix-run/serve": "^2.15.2",
+    "install": "^0.13.0",
     "isbot": "^4.1.0",
     "lucide-react": "^0.469.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "swapy": "^1.0.3"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.15.2",
