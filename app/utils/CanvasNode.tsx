@@ -1,3 +1,5 @@
+import { createContext } from "react";
+
 class CanvasNode {
     type:NodeTypes;
     id:string;
@@ -16,7 +18,7 @@ class CanvasNode {
     render() {
         if (this.type === "container") {
             return (
-                <div key={this.id} style={this.style} id={this.id}>
+                <div key={this.id} style={this.style} id={this.id} onClick={(e)=>this.onClick(e)} >
                     {this.children?.map((child: any) => child.render())}
                 </div>
             );
@@ -24,7 +26,7 @@ class CanvasNode {
 
         if (this.type === "heading") {
             return (
-                <h1 key={this.id} style={this.style} id={this.id}>
+                <h1 key={this.id} style={this.style} id={this.id} onClick={(e)=>this.onClick(e)} >
                     {this.content}
                 </h1>
             );
@@ -32,13 +34,13 @@ class CanvasNode {
 
         if (this.type === "input") {
             return (
-                <input key={this.id} style={this.style} id={this.id} />
+                <input key={this.id} style={this.style} id={this.id} onClick={(e)=>this.onClick(e)} />
             );
         }
 
         if (this.type === "button") {
             return (
-                <button key={this.id} style={this.style} id={this.id} >
+                <button key={this.id} style={this.style} id={this.id} onClick={(e)=>this.onClick(e)}>
                     {this.content}
                 </button>
             );
@@ -86,7 +88,27 @@ class CanvasNode {
 
     onClick(e:React.MouseEvent){
         e.stopPropagation();
-        console.log(this.id);
+
+        const previouslySelectedElement = document.querySelector('.selectedEl') as HTMLElement;
+        const selectedElement = document.getElementById(this.id) ;
+        if (previouslySelectedElement) {
+            previouslySelectedElement.className = ""; 
+            previouslySelectedElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            previouslySelectedElement.style.border = '1px dotted black';
+            previouslySelectedElement.style.transform = 'scale(1)';
+            previouslySelectedElement.style.position = 'relative'; 
+            previouslySelectedElement.style.outline = 'none';
+        }
+        
+        if (selectedElement) {
+            selectedElement.className = "selectedEl"; 
+            selectedElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            selectedElement.style.border = '2px solid #22c55e';
+            selectedElement.style.transform = 'scale(1.02)'; 
+            selectedElement.style.position = 'relative'; 
+            selectedElement.style.outline = 'none';
+        }
+        
     }
    
 }

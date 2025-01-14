@@ -1,13 +1,7 @@
 import React, { useRef, useState } from "react";
 import CanvasNode, { NodeTypes } from "~/utils/CanvasNode";
-
-type DocMap = {
-  type: "container" | "heading" | "input" | "button";
-  id: string;
-  style: React.CSSProperties;
-  children: DocMap[] | null;
-  content?: string;
-};
+import { constructNode } from "~/utils/elementConstructors";
+import { findParentNode, generateRandomId } from "~/utils/functions";
 
 const WebsiteBuilder: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -22,96 +16,38 @@ const WebsiteBuilder: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     selectedElementRef.current = elementType;
-
   };
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const id = Math.random().toString().substring(7);
+    const id = generateRandomId(usedIds);
     setUsedIds([...usedIds, id]);
     let node;
-    if (selectedElementRef.current == "container") {
-      node = new CanvasNode(
-        selectedElementRef.current,
-        id,
-        {
-          border: "1px dotted black",
-          minHeight: "100px",
-          display: "flex",
-          flexDirection: "column",
-          padding:'0.5rem',
-          margin:'0.5rem',
-        },
-        null
-      );
-    }
-    if (selectedElementRef.current == "input") {
-      node = new CanvasNode(
-        selectedElementRef.current,
-        id,
-        {
-          height: "30px",
-          border: "1px solid black",
-        },
-        null
-      );
-    }
-    if (selectedElementRef.current == "button") {
-      node = new CanvasNode(
-        selectedElementRef.current,
-        id,
-        {
-          height: "30px",
-          backgroundColor: "blue",
-        },
-        null,
-        "Button"
-      );
-    }
-    if (selectedElementRef.current == "heading") {
-      node = new CanvasNode(
-        selectedElementRef.current,
-        id,
-        {
-          height: "30px",
-          width: "200px",
-        },
-        null,
-        "Heading"
-      );
+    if (selectedElementRef.current) {
+      node = constructNode(selectedElementRef.current, id);
     }
     if (node) {
-      if (selectedElementRef.current === "container" && (e.target as Element).id === "parent") {
-        setDocMap((prevDocMap) => (prevDocMap.length === 0 ? [node] : [...prevDocMap, node]));
+      if (
+        selectedElementRef.current === "container" &&
+        (e.target as Element).id === "parent"
+      ) {
+        setDocMap((prevDocMap) =>
+          prevDocMap.length === 0 ? [node] : [...prevDocMap, node]
+        );
       } else if ((e.target as Element).id !== "parent") {
         const targetId = (e.target as Element).id;
         const parentNode = findParentNode(targetId, docMap);
         parentNode?.addchild(node);
       }
     }
-    
-  };
-
-  const findParentNode = (id: string, nodes: CanvasNode[]): CanvasNode | undefined => {
-    for (const node of nodes) {
-      if (node.id === id) {
-        return node;
-      }
-      if (node.children) {
-        const found = findParentNode(id, node.children);
-        if (found) {
-          return found;
-        }
-      }
-    }
-    return undefined;
   };
 
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-  }
+  };
+
   return (
     <div className="flex h-screen bg-gray-100 p-4 gap-2 justify-between">
       <div className="bg-white rounded w-1/5 border border-gray-200 p-2">
@@ -166,6 +102,19 @@ const WebsiteBuilder: React.FC = () => {
         <div className="text-gray-500 text-sm">
           Select an element to edit parameters
         </div>
+        {localStorage.getItem("selectedElementType") === "container" && (
+          <div className="flex flex-col gap-2 mt-2">
+            <label>Height</label>
+            <input type="text" />
+            <label>split</label>
+            <select>
+              <option value="1/2">1/2</option>
+              <option value="1/3">1/3</option>
+              <option value="2/3">2/3</option>
+              <option value="1/4">1/4</option>
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );
