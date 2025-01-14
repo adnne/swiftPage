@@ -1,112 +1,97 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createSwapy, SlotItemMapArray, Swapy, utils } from "swapy";
+import React, { useRef, useState } from "react";
+import CanvasNode, { NodeTypes } from "~/utils/CanvasNode";
 
-type Item = {
-  id: string;
-  title: string;
-};
+type DocMap = {
+  type:'container'|'heading'|'input'|'button',
+  id:string,
+  style:React.CSSProperties,
+  children:DocMap[]|null,
+  content?:string
+}
 
-const initialItems: Item[] = [
-  { id: "1", title: "1" },
-  { id: "2", title: "2" },
-  { id: "3", title: "3" },
-];
 
-let id = 4;
 const WebsiteBuilder: React.FC = () => {
-  const [items, setItems] = useState<Item[]>(initialItems);
-  const [slotItemMap, setSlotItemMap] = useState<SlotItemMapArray>(
-    utils.initSlotItemMap(items, "id")
-  );
-  const slottedItems = useMemo(
-    () => utils.toSlottedItems(items, "id", slotItemMap),
-    [items, slotItemMap]
-  );
-  const swapyRef = useRef<Swapy | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [usedIds, setUsedIds] = useState<string[]>([]);
+  const [docMap, setDocMap] = useState<CanvasNode>();
+  const [selectedElement, setSelectedElement] = useState<NodeTypes>();
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const onDrag = (e: React.DragEvent<HTMLDivElement>,elementType:NodeTypes) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedElement(elementType);
+  }
 
-  useEffect(
-    () =>
-      utils.dynamicSwapy(
-        swapyRef.current,
-        items,
-        "id",
-        slotItemMap,
-        setSlotItemMap
-      ),
-    [items]
-  );
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(selectedElement);
+    if (selectedElement=='container') {
+      const id = Math.random().toString().substring(7);
+      setUsedIds([...usedIds,id]);
+      const newNode = new CanvasNode(selectedElement,id,{
+        border:'1px dotted black',
+        height:'100px',
+        display:'flex',
+        flexDirection:'column'
+      },null);
 
-  useEffect(() => {
-    swapyRef.current = createSwapy(containerRef.current!, {
-      manualSwap: true,
-      // animation: 'dynamic'
-      // autoScrollOnDrag: true,
-      // swapMode: 'drop',
-      // enabled: true,
-      // dragAxis: 'x',
-      // dragOnHold: true
-    });
-
-    swapyRef.current.onSwap((event) => {
-      setSlotItemMap(event.newSlotItemMap.asArray);
-    });
-
-    return () => {
-      swapyRef.current?.destroy();
-    };
-  }, []);
-
-
+      
+        // If this is the first node, set it as the root
+        setDocMap(newNode);
+    }
+ 
+  }
   return (
     <div className="flex h-screen bg-gray-100 p-4 gap-2 justify-between">
-      <div className="bg-white  rounded w-1/5 border border-gray-200">
-        components
-        {/* <div className="container" ref={componetsContainerRef}>
-          {items.map((item) => (
-            <div className="item" key={item.id} data-swapy-item={item.id}>
-              {item.title}
-            </div>
-          ))}
-
-        </div> */}
-      </div>
-      <div className="bg-white rounded w-full border  border-gray-200">
-        canvas
-        <div className="container" ref={containerRef}>
-          <div className="items">
-            {slottedItems.map(({ slotId, itemId, item }) => (
-              <div className="slot" key={slotId} data-swapy-slot={slotId}>
-                {item && (
-                  <div className="item" data-swapy-item={itemId} key={itemId}>
-                    <span>{item.title}</span>
-                    <span
-                      className="delete"
-                      data-swapy-no-drag
-                      onClick={() => {
-                        setItems(items.filter((i) => i.id !== item.id));
-                      }}
-                    ></span>
-                  </div>
-                )}
-              </div>
-            ))}
+      <div className="bg-white rounded w-1/5 border border-gray-200 p-2">
+        <h3 className="text-center font-bold mb-2">Components</h3>
+        <div className="flex flex-col gap-1">
+          <div
+            className="h-10 text-center bg-blue-500 text-white rounded cursor-pointer"
+            draggable
+            onDrag={(e) => onDrag(e,'container')}
+          >
+            Container
           </div>
           <div
-            className="item item--add"
-            onClick={() => {
-              const newItem: Item = { id: `${id}`, title: `${id}` };
-              setItems([...items, newItem]);
-              id++;
-            }}
+            className="h-10 text-center bg-green-500 text-white rounded cursor-pointer"
+            draggable
+            onDrag={(e) => onDrag(e,'input')}
           >
-            +
+            Input
           </div>
+          <div
+            className="h-10 text-center bg-red-500 text-white rounded cursor-pointer"
+            draggable
+            onDrag={(e) => onDrag(e,'button')}
+          >
+            Button
+          </div>
+          <div
+            className="h-10 text-center bg-yellow-500 text-white rounded cursor-pointer"
+            draggable
+            onDrag={(e) => onDrag(e,'heading')}
+          >
+            Heading
+          </div>
+
         </div>
       </div>
-      <div className="bg-white rounded w-1/5 border border-gray-200">
-        parameters
+
+      <div
+        className="bg-white rounded w-full border border-gray-200 p-2"
+      >
+        <h3 className="text-center font-bold mb-2">Canvas</h3>
+        <div ref={canvasRef} onDrop={onDrop} onDragOver={(e) => e.preventDefault()} className="h-96 border border-gray-200 rounded p-2">
+          {docMap && docMap.render()}
+        </div>
+      </div>
+
+      <div className="bg-white rounded w-1/5 border border-gray-200 p-2">
+        <h3 className="text-center font-bold mb-2">Parameters</h3>
+        <div className="text-gray-500 text-sm">Select an element to edit parameters</div>
       </div>
     </div>
   );
