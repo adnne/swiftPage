@@ -1,4 +1,6 @@
 import React, { useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { selectNode } from "~/NodeElement/NodeElementSlice";
 
 import  { CanvasNode, NodeTypes } from "~/utils/CanvasNode";
 import { constructNode } from "~/utils/elementConstructors";
@@ -10,6 +12,7 @@ const WebsiteBuilder: React.FC = () => {
   const [usedIds, setUsedIds] = useState<string[]>([]);
   const [docMap, setDocMap] = useState<CanvasNode[]>([]);
   const selectedElementRef = useRef<NodeTypes | null>(null);
+  const dispatch = useDispatch()
 
   const onDrag = (
     e: React.DragEvent<HTMLDivElement>,
@@ -27,7 +30,7 @@ const WebsiteBuilder: React.FC = () => {
     setUsedIds([...usedIds, id]);
     let node;
     if (selectedElementRef.current) {
-      node = constructNode(selectedElementRef.current, id);
+      node = constructNode(selectedElementRef.current, id,undefined,clickCallback);
     }
     
     if (node) {
@@ -50,6 +53,10 @@ const WebsiteBuilder: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
   };
+
+  const clickCallback = (id:string,type:NodeTypes) =>{
+    dispatch(selectNode({id,type}))
+  }
 
   return (
     <div className="flex h-screen bg-gray-100 p-4 gap-2 justify-between">
@@ -96,7 +103,7 @@ const WebsiteBuilder: React.FC = () => {
           id="parent"
           className="min-h-96 border border-gray-200 rounded p-2"
         >
-          {docMap && docMap.map((node) => node.render())}
+          {docMap.map((node) => node.render())}
         </div>
       </div>
 

@@ -21,7 +21,8 @@ const STYLES: styles = {
 export const constructNode = (
   elementType: NodeTypes,
   id: string,
-  content?: string
+  content?: string,
+  callback
 ): any  => {
   const style = STYLES[elementType];
   
@@ -31,6 +32,7 @@ export const constructNode = (
     style,
     children: [],
     content: content,
+    clickCallback:callback
   })
   return node;
 };

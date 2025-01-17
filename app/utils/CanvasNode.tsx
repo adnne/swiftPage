@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 export type NodeTypes = "container" | "heading" | "input" | "button";
 
@@ -8,8 +8,9 @@ export interface CanvasNodeProps {
   style: React.CSSProperties;
   children?: CanvasNode[];
   content?: string;
+  clickCallback(id:string,type:string):()=>{}
 }
-  
+
 export class CanvasNode extends Component<CanvasNodeProps> {
   public children: CanvasNode[] | null = null;
 
@@ -59,53 +60,67 @@ export class CanvasNode extends Component<CanvasNodeProps> {
   onClick(e: React.MouseEvent) {
     e.stopPropagation();
     const { id, type } = this.props;
-    
-    const previouslySelectedElement = document.querySelector('.selectedEl') as HTMLElement;
+
+    this.props.clickCallback(this.props.id,this.props.type)
+
+    const previouslySelectedElement = document.querySelector(
+      ".selectedEl"
+    ) as HTMLElement;
     const selectedElement = document.getElementById(id);
 
     if (previouslySelectedElement) {
-      previouslySelectedElement.className = '';
-      previouslySelectedElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-      previouslySelectedElement.style.border = '1px dotted black';
-      previouslySelectedElement.style.transform = 'scale(1)';
-      previouslySelectedElement.style.position = 'relative';
-      previouslySelectedElement.style.outline = 'none';
+      previouslySelectedElement.className = "";
+      previouslySelectedElement.style.transition =
+        "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+      previouslySelectedElement.style.border = "1px dotted black";
+      previouslySelectedElement.style.transform = "scale(1)";
+      previouslySelectedElement.style.position = "relative";
+      previouslySelectedElement.style.outline = "none";
     }
 
     if (selectedElement) {
-      selectedElement.className = 'selectedEl';
-      selectedElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-      selectedElement.style.border = '2px solid #22c55e';
-      selectedElement.style.transform = 'scale(1.02)';
-      selectedElement.style.position = 'relative';
-      selectedElement.style.outline = 'none';
+      selectedElement.className = "selectedEl";
+      selectedElement.style.transition =
+        "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+      selectedElement.style.border = "2px solid #22c55e";
+      selectedElement.style.transform = "scale(1.02)";
+      selectedElement.style.position = "relative";
+      selectedElement.style.outline = "none";
     }
   }
 
-  renderContent() {
+  callback () {
+    return this.props.id
+  }
+  render() {
     const { type, id, style, content, children } = this.props;
 
     switch (type) {
-      case 'container':
+      case "container":
         return (
-          <div key={id} style={style} id={id} onClick={this.onClick}>
+          <div
+            key={id}
+            style={style}
+            id={id}
+            onClick={(e) => {
+              this.onClick(e);
+            }}
+          >
             {children?.map((child: any) => child.render())}
           </div>
         );
 
-      case 'heading':
+      case "heading":
         return (
           <h1 key={id} style={style} id={id} onClick={this.onClick}>
             {content}
           </h1>
         );
 
-      case 'input':
-        return (
-          <input key={id} style={style} id={id} onClick={this.onClick} />
-        );
+      case "input":
+        return <input key={id} style={style} id={id} onClick={this.onClick} />;
 
-      case 'button':
+      case "button":
         return (
           <button key={id} style={style} id={id} onClick={this.onClick}>
             {content}
@@ -116,10 +131,4 @@ export class CanvasNode extends Component<CanvasNodeProps> {
         return null;
     }
   }
-
-  render() {
-    return this.renderContent();
-  }
 }
-
-
