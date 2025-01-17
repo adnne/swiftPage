@@ -1,9 +1,9 @@
-import CanvasNode from "./CanvasNode";
+import {CanvasNode} from "./CanvasNode";
 import { v4 as uuidv4 } from 'uuid';
 
 export  const findParentNode = (id: string, nodes: CanvasNode[]): CanvasNode | undefined => {
     for (const node of nodes) {
-      if (node.id === id) {
+      if (node.props.id === id) {
         return node;
       }
       if (node.children) {

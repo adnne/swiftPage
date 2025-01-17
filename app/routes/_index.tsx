@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
-import CanvasNode, { NodeTypes } from "~/utils/CanvasNode";
+
+import  { CanvasNode, NodeTypes } from "~/utils/CanvasNode";
 import { constructNode } from "~/utils/elementConstructors";
 import { findParentNode, generateRandomId } from "~/utils/functions";
+
 
 const WebsiteBuilder: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -27,6 +29,7 @@ const WebsiteBuilder: React.FC = () => {
     if (selectedElementRef.current) {
       node = constructNode(selectedElementRef.current, id);
     }
+    
     if (node) {
       if (
         selectedElementRef.current === "container" &&
@@ -38,7 +41,7 @@ const WebsiteBuilder: React.FC = () => {
       } else if ((e.target as Element).id !== "parent") {
         const targetId = (e.target as Element).id;
         const parentNode = findParentNode(targetId, docMap);
-        parentNode?.addchild(node);
+        parentNode?.addChild(node);
       }
     }
   };
@@ -102,7 +105,7 @@ const WebsiteBuilder: React.FC = () => {
         <div className="text-gray-500 text-sm">
           Select an element to edit parameters
         </div>
-        {localStorage.getItem("selectedElementType") === "container" && (
+        {/* {localStorage.getItem("selectedElementType") === "container" && (
           <div className="flex flex-col gap-2 mt-2">
             <label>Height</label>
             <input type="text" />
@@ -114,7 +117,7 @@ const WebsiteBuilder: React.FC = () => {
               <option value="1/4">1/4</option>
             </select>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
